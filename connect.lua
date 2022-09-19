@@ -5,6 +5,8 @@ local tcp = assert(socket.tcp())
 tcp:settimeout(20,'t')
 tcp:connect(host, port);
 
+-- "I think rx counter is only 8bits currently so on hw it would wrap on the page"
+
 TX = 0x6000
 RX = 0x6400
 
@@ -40,13 +42,12 @@ function txControl(address, value)
   tx = {}
   for i=1, 0x100 do
       byte = emu.read(TX + (i-1),0,0)
-      if byte == 13 and emu.read(TX + i,0,0) == 10 then
-        break
-      end
       tx[i] = string.char(byte)
+      if i == value then
+          break
+      end
   end
-   print(tx)
-  cmd = table.concat(tx, "").."\r\n"
+  cmd = table.concat(tx, "")
   tcp:send("@"..cmd);
   buffer = ""
   for i = 0, 256 do
